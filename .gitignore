@@ -1,0 +1,19 @@
+@"
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+
+# Spring Boot - NUNCA subir credenciales reales
+backend/src/main/resources/application.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/settings.json
+
+# OS Windows
+Thumbs.db
+desktop.ini
+"@ | Out-File -FilePath ".gitignore" -Encoding utf8
