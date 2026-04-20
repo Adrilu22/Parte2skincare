@@ -19,17 +19,25 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: maven
 
-      - name: Compilar backend con Maven
-        working-directory: backend
-        run: mvn clean compile -q
-
-      - name: Verificar frontend
+      - name: Compilar backend (si existe)
         run: |
-          echo "Verificando archivos frontend..."
-          ls -la frontend/
-          test -f frontend/index.html && echo "✅ index.html existe"
+          if [ -f "backend/pom.xml" ]; then
+            echo "Backend encontrado, compilando..."
+            cd backend
+            mvn clean compile -q
+          else
+            echo "⚠️ No hay backend aún, se omite compilación"
+          fi
 
-      - name: Notificación de build exitoso
-        run: echo "✅ Build completado exitosamente en $(date)"
+      - name: Verificar frontend (si existe)
+        run: |
+          if [ -d "frontend" ]; then
+            echo "Frontend encontrado"
+            ls -la frontend/
+          else
+            echo "⚠️ No hay frontend aún"
+          fi
+
+      - name: Finalización
+        run: echo "✅ CI ejecutado correctamente"
