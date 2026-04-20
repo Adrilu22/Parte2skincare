@@ -20,13 +20,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Dar permisos a mvnw
-        run: chmod +x backend/mvnw
-
       - name: Compilar backend con Maven
-        run: |
-          cd backend
-          ./mvnw clean compile -q
+        run: cd backend && mvn clean compile -q
         
       - name: Verificar frontend
         run: |
