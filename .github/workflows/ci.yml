@@ -1,0 +1,35 @@
+name: CI — Build and Test
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Compilar backend con Maven
+        run: |
+          cd backend
+          ./mvnw clean compile -q
+        
+      - name: Verificar frontend
+        run: |
+          echo "Verificando archivos frontend..."
+          ls -la frontend/
+          test -f frontend/index.html && echo "✅ index.html existe"
+
+      - name: Notificación de build exitoso
+        run: echo "✅ Build completado exitosamente en $(date)"
