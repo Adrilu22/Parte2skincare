@@ -4,40 +4,62 @@ on:
   push:
     branches: [ main, development ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, development ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout código
+      - name: "1 · Descargar el código del repositorio"
         uses: actions/checkout@v4
 
-      - name: Configurar Java 21
+      - name: "2 · Configurar Java (versión estable)"
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Compilar backend (si existe)
+      - name: "3 · Compilar backend (si existe)"
         run: |
           if [ -f "backend/pom.xml" ]; then
-            echo "Backend encontrado, compilando..."
+            echo "Backend encontrado, compilando con Maven..."
             cd backend
-            mvn clean compile -q
+            mvn clean compile -q \
+              -Dspring.datasource.url=jdbc:postgresql://localhost/test \
+              -Dspring.datasource.username=test \
+              -Dspring.datasource.password=test \
+              --no-transfer-progress
           else
             echo "⚠️ No hay backend aún, se omite compilación"
           fi
 
-      - name: Verificar frontend (si existe)
+      - name: "4 · Verificar estructura del proyecto"
         run: |
-          if [ -d "frontend" ]; then
-            echo "Frontend encontrado"
-            ls -la frontend/
-          else
-            echo "⚠️ No hay frontend aún"
-          fi
+          echo "=== Verificando archivos clave ==="
+          echo ""
+          echo "📁 Frontend:"
+          test -f frontend/index.html \
+            && echo "  ✅ frontend/index.html OK" \
+            || echo "  ❌ frontend/index.html FALTANTE"
+          echo ""
+          echo "📁 Base de datos:"
+          test -f database/schema.sql \
+            && echo "  ✅ database/schema.sql OK" \
+            || echo "  ❌ database/schema.sql FALTANTE"
+          test -f database/seed.sql \
+            && echo "  ✅ database/seed.sql OK" \
+            || echo "  ❌ database/seed.sql FALTANTE"
+          echo ""
+          echo "📁 Documentación:"
+          test -f docs/api-documentation.md \
+            && echo "  ✅ docs/api-documentation.md OK" \
+            || echo "  ❌ docs/api-documentation.md FALTANTE"
+          echo ""
+          echo "✅ Verificación completada — $(date '+%d/%m/%Y %H:%M UTC')"
+          echo "🔀 Rama: ${{ github.ref_name }}"
+          echo "📝 Commit: ${{ github.sha }}"
 
-      - name: Finalización
+      - name: "5 · Finalización"
         run: echo "✅ CI ejecutado correctamente"

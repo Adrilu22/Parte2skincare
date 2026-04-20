@@ -2,17 +2,58 @@ name: Project Automation
 
 on:
   issues:
-    types: [opened, assigned, closed]
+    types: [opened, assigned, closed, reopened]
   pull_request:
-    types: [opened, closed]
+    types: [opened, closed, review_requested]
 
 jobs:
-  update-project-status:
+  project-automation:
+    name: Automatización de Issues y PRs
     runs-on: ubuntu-latest
 
     steps:
-      - name: Log event
+      - name: Log de evento
         run: |
-          echo "Evento: ${{ github.event_name }}"
-          echo "Accion: ${{ github.event.action }}"
-          echo "Issue/PR: ${{ github.event.issue.title || github.event.pull_request.title }}"
+          echo "============================================"
+          echo "   GlowLab — Automatización del Proyecto"
+          echo "============================================"
+          echo "Evento  : ${{ github.event_name }}"
+          echo "Acción  : ${{ github.event.action }}"
+          echo "Fecha   : $(date '+%d/%m/%Y %H:%M UTC')"
+          echo "--------------------------------------------"
+
+      - name: Procesar Issue
+        if: github.event_name == 'issues'
+        run: |
+          echo "📋 ISSUE #${{ github.event.issue.number }}"
+          echo "   Título  : ${{ github.event.issue.title }}"
+          echo "   Autor   : ${{ github.event.issue.user.login }}"
+          echo "   Estado  : ${{ github.event.action }}"
+          echo ""
+          if [ "${{ github.event.action }}" = "opened" ]; then
+            echo "➡️  Acción sugerida: Mover card a READY en el tablero Kanban"
+          elif [ "${{ github.event.action }}" = "assigned" ]; then
+            echo "➡️  Acción sugerida: Mover card a IN PROGRESS en el tablero Kanban"
+          elif [ "${{ github.event.action }}" = "closed" ]; then
+            echo "➡️  Acción sugerida: Mover card a DONE en el tablero Kanban"
+          elif [ "${{ github.event.action }}" = "reopened" ]; then
+            echo "➡️  Acción sugerida: Mover card a BACKLOG en el tablero Kanban"
+          fi
+
+      - name: Procesar Pull Request
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "🔀 PULL REQUEST #${{ github.event.pull_request.number }}"
+          echo "   Título  : ${{ github.event.pull_request.title }}"
+          echo "   Rama    : ${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}"
+          echo "   Autor   : ${{ github.event.pull_request.user.login }}"
+          echo "   Estado  : ${{ github.event.action }}"
+          echo ""
+          if [ "${{ github.event.action }}" = "review_requested" ]; then
+            echo "➡️  Acción sugerida: Mover card a REVIEW en el tablero Kanban"
+          elif [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+            echo "✅ PR mergeado — Mover issue relacionada a DONE"
+          elif [ "${{ github.event.action }}" = "closed" ]; then
+            echo "➡️  PR cerrado sin merge — revisar issue relacionada"
+          fi
+          echo "============================================"
