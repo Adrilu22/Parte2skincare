@@ -1,0 +1,43 @@
+name: CI — Build and Test
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Compilar backend (si existe)
+        run: |
+          if [ -f "backend/pom.xml" ]; then
+            echo "Backend encontrado, compilando..."
+            cd backend
+            mvn clean compile -q
+          else
+            echo "⚠️ No hay backend aún, se omite compilación"
+          fi
+
+      - name: Verificar frontend (si existe)
+        run: |
+          if [ -d "frontend" ]; then
+            echo "Frontend encontrado"
+            ls -la frontend/
+          else
+            echo "⚠️ No hay frontend aún"
+          fi
+
+      - name: Finalización
+        run: echo "✅ CI ejecutado correctamente"
